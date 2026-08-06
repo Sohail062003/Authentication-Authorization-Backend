@@ -1,0 +1,49 @@
+# Dependencies - Never commit the heavy node_modules folder
+node_modules/
+jspm_packages/
+
+# Environment Variables - Critical security risk if committed
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs - Prevents bloating the repo with server logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data (PIDs and seeds)
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Build Directories - If you are using TypeScript or a bundler
+dist/
+build/
+.cache/
+
+# Testing and Coverage
+coverage/
+.nyc_output/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System Files
+.DS_Store
+Thumbs.db
