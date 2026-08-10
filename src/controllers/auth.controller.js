@@ -178,6 +178,17 @@ class AuthController {
             
         }
     }
+
+    static async logout(req, res) {
+        try {
+
+        } catch (error) {
+            return res.status(500).json({
+                status: "error",
+                message: "Internal Server Error" + error
+            })
+        }
+    }
 }
 
 
