@@ -4,9 +4,12 @@ import { AuthController } from "../controllers/index.js";
 const router = Router();
 
 router.post("/register", AuthController.register);
+router.post("/login", AuthController.login);
+
 router.get("/get-user", AuthController.getUser);
 router.get("/refresh-token", AuthController.refreshToken);
 router.get("/logout", AuthController.logout);
+router.get("/logout-all", AuthController.logoutAll);
 
 // module.exports = router;
 export default router;

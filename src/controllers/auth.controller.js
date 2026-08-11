@@ -6,60 +6,6 @@ import sessionModel from "../models/session.model.js";
 
 class AuthController {
 
-    static async refreshToken(req, res){
-        try {
-            const refreshToken = req.cookies.refreshToken;
-
-            if (!refreshToken) {
-                return res.status(401).json({
-                    status: "failed",
-                    message: "refreshToken not found"
-                });
-            }
-
-            const decoded = jwt.verify(refreshToken, config.JWT_SECRET);
-
-            const accessToken = jwt.sign(
-                {
-                    id: decoded.id
-                },
-                config.JWT_SECRET,
-                {
-                    expiresIn: "15m"
-                }
-            );
-
-            const newRefreshToken = jwt.sign(
-                {
-                    id: decoded.id
-                },
-                config.JWT_SECRET,
-                {
-                    expiresIn: "7d"
-                }
-            );
-
-            res.cookie("refreshToken", newRefreshToken, {
-                httpOnly: true,
-                secure: true,
-                sameSite: "strict",
-                maxAge: 7 * 24 * 60 * 60 * 1000 // 7d
-            })
-
-            return res.status(200).json({
-                status: "sucess",
-                message: "access token refreshed successfully",
-                accessToken
-            });
-
-
-        } catch (error) {
-            return res.status(500).json({
-                status: "error",
-                message: "Internal Server Error " + error,
-            })
-        }
-    }
 
     static async register(req, res) {
         try {
@@ -149,6 +95,156 @@ class AuthController {
         
     }
 
+    static async login(req, res) {
+        try {
+            const {email, password} = req.body
+            const user = await userModel.findOne({ email });
+
+            if (!user) {
+                return res.status(401).json({
+                    status: "failed",
+                    message: "Invalid email or password"
+                });
+            }
+
+            const hashedPassword = crypto.createHash("sha256").update(password).digest("hex");
+
+            const isPasswordValid = hashedPassword === user.password;
+
+            if (!isPasswordValid) {
+                return res.status(401).json({
+                    status: "failed",
+                    message: "Invalid email or password"
+                });
+            }
+
+            const refreshToken = jwt.sign({
+               id: user._id 
+            }, config.JWT_SECRET,
+            {
+                expiresIn: "7d"
+            });
+
+            const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+
+
+            const session = await sessionModel.create({
+                user: user._id,
+                refreshToken: refreshTokenHash,
+                ip: req.ip,
+                userAgent: req.headers[ "user-agent" ]
+            });
+
+            const accessToken = jwt.sign({
+                   id: user._id,
+                   sessionId: session._id
+                }, config.JWT_SECRET,
+                {
+                    expiresIn: "15m"
+                }
+            );
+
+            res.cookie("refreshToken", refreshToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7d
+            });
+
+            const data = {
+                username: user.username,
+                email: user.email
+            }
+
+            return res.status(200).json({
+                status: "success",
+                message: "Logged in successfully",
+                data: data,
+                accessToken
+            });
+
+        } catch (error) {
+            return res.status(500).json({
+                status: "Error",
+                message: "Internal Server Error: " + error
+            })
+        }
+    }
+
+    static async refreshToken(req, res){
+        try {
+            const refreshToken = req.cookies.refreshToken;
+
+            if (!refreshToken) {
+                return res.status(401).json({
+                    status: "failed",
+                    message: "refreshToken not found"
+                });
+            }
+
+            const decoded = jwt.verify(refreshToken, config.JWT_SECRET);
+
+            const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+
+            const session = await sessionModel.findOne({
+                refreshToken: refreshTokenHash,
+                revoked: false
+            });
+
+            if (!session) {
+                return res.status(401).json({
+                    status: "failed",
+                    message: "Invalid refresh token"
+                });
+            }
+
+            const accessToken = jwt.sign(
+                {
+                    id: decoded.id
+                },
+                config.JWT_SECRET,
+                {
+                    expiresIn: "15m"
+                }
+            );
+
+            const newRefreshToken = jwt.sign(
+                {
+                    id: decoded.id
+                },
+                config.JWT_SECRET,
+                {
+                    expiresIn: "7d"
+                }
+            );
+
+            const newRefreshTokenHash = crypto.createHash("sha256").update(newRefreshToken).digest("hex");
+
+            session.refreshToken = newRefreshTokenHash;
+            await session.save();
+
+            res.cookie("refreshToken", newRefreshToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict",
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7d
+            })
+
+            return res.status(200).json({
+                status: "sucess",
+                message: "access token refreshed successfully",
+                accessToken
+            });
+
+
+        } catch (error) {
+            return res.status(500).json({
+                status: "error",
+                message: "Internal Server Error " + error,
+            })
+        }
+    }
+
     static async getUser(req, res){
         try {
             const token = req.headers.authorization?.split(" ")[ 1 ];
@@ -181,12 +277,81 @@ class AuthController {
 
     static async logout(req, res) {
         try {
+            const refreshToken = req.cookies.refreshToken;
+
+            if (!refreshToken) {
+                return res.status(401).json({
+                    status: "failed",
+                    message: "refreshtoken not found"
+                });
+            }
+
+            const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+
+            const session = await sessionModel.findOne({
+                 refreshToken: refreshTokenHash,
+                revoked: false
+            });
+
+            if (!session) {
+                return res.status(401).json({
+                    status: "failed",
+                    message: "session not found"
+                });
+            }
+
+            session.revoked = true;
+            await session.save();
+
+            res.clearCookie("refreshToken");
+
+            return res.status(200).json({
+                status: "success",
+                message: "user logout successfully"
+            });
 
         } catch (error) {
             return res.status(500).json({
                 status: "error",
                 message: "Internal Server Error" + error
             })
+        }
+    }
+
+    static async logoutAll(req, res) {
+        try {
+            
+            const refreshToken = req.cookies.refreshToken;
+
+            if (!refreshToken) {
+                return res.status(401).json({
+                    status: "failed",
+                    message: "Refresh Token not found"
+                });
+            }
+
+            const decoded = jwt.verify(refreshToken, config.JWT_SECRET);
+
+            await sessionModel.updateMany({
+                user: decoded.id,
+                revoked: false
+            }, {
+                revoked: true
+            })
+
+
+            res.clearCookie("refreshToken");
+
+            return res.status(200).json({
+                status: "success",
+                message: "Logged out from all devices Successfully"
+            })
+
+        } catch (error) {
+            return res.status(500).json({
+                status: "Error",
+                message: "internal Server Error: " + error
+            });
         }
     }
 }
