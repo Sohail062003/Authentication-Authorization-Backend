@@ -320,7 +320,6 @@ class AuthController {
 
     static async logoutAll(req, res) {
         try {
-            
             const refreshToken = req.cookies.refreshToken;
 
             if (!refreshToken) {
