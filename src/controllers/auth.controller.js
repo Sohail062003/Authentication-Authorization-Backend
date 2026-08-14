@@ -99,7 +99,7 @@ class AuthController {
         try {
             const {email, password} = req.body
             const user = await userModel.findOne({ email });
-
+            console.log("login controller");
             if (!user) {
                 return res.status(401).json({
                     status: "failed",

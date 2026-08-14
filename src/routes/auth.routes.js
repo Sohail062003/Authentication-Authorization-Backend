@@ -1,10 +1,11 @@
 import { Router } from "express";
+import  rateLimiter  from "../middleware/rateLimiter.js";
 import { AuthController } from "../controllers/index.js";
 
 const router = Router();
 
 router.post("/register", AuthController.register);
-router.post("/login", AuthController.login);
+router.post("/login", rateLimiter, AuthController.login);
 
 router.get("/get-user", AuthController.getUser);
 router.get("/refresh-token", AuthController.refreshToken);
