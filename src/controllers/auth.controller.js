@@ -44,7 +44,6 @@ class AuthController {
             )
 
             const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
-            console.log(refreshTokenHash)
 
             const session = await sessionModel.create({
                 user: user._id,
@@ -272,6 +271,55 @@ class AuthController {
 
         } catch (error) {
             
+        }
+    }
+
+    static async getAllUser(req, res){
+        try {
+
+            const page = Number(req.query.page) || 1;           // its come in string so we need to convert it into number
+            const limit = Number(req.query.limit) || 3;         
+
+            const skip = (page - 1) * limit;  // (1 - 1) * 3 = 0, (2-1) * 3 = 3, 
+            
+
+            const user = await userModel
+                .find()
+                .skip(skip)
+                .limit(limit);
+            
+            if (user.length === 0) {
+                return res.status(400).json({
+                    status: "falied",
+                    message: "user not found" 
+                });
+            }
+
+            const totalUsers = await userModel.countDocuments();
+            const totalPages = totalUsers > 0 ? Math.ceil(totalUsers / limit) : 0;
+            const hasNextPage = page < totalPages;
+            const hasPreviousPage = page > 1;
+
+            const pagination = {
+                currentPage: page,
+                totalUsers,
+                totalPages,
+                hasNextPage,
+                hasPreviousPage
+            }
+
+            return res.status(200).json({
+                status: "success",
+                message: "user found successfully",
+                data: user,
+                pagination: pagination
+            });
+
+        } catch (error) {
+            return res.status(500).json({
+                status: "error",
+                message: "Internal server error "+ error
+            })
         }
     }
 
