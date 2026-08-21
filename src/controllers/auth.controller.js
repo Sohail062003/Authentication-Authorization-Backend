@@ -6,7 +6,7 @@ import sessionModel from "../models/session.model.js";
 
 class AuthController {
 
-
+    // register 
     static async register(req, res) {
         try {
             const { username, email, password } = req.body;
@@ -94,6 +94,7 @@ class AuthController {
         
     }
 
+    // login
     static async login(req, res) {
         try {
             const {email, password} = req.body
@@ -170,6 +171,7 @@ class AuthController {
         }
     }
 
+    // refreshToken 
     static async refreshToken(req, res){
         try {
             const refreshToken = req.cookies.refreshToken;
@@ -244,6 +246,7 @@ class AuthController {
         }
     }
 
+    // getUser by token 
     static async getUser(req, res){
         try {
             const token = req.headers.authorization?.split(" ")[ 1 ];
@@ -274,6 +277,7 @@ class AuthController {
         }
     }
 
+    // offset based pagination - page and limit
     static async getAllUser(req, res){
         try {
 
@@ -281,11 +285,11 @@ class AuthController {
             const limit = Number(req.query.limit) || 3;         
 
             const skip = (page - 1) * limit;  // (1 - 1) * 3 = 0, (2-1) * 3 = 3, 
-            
 
             const user = await userModel
-                .find()
+                .find().select("-password -__v")
                 .skip(skip)
+                .sort({ createdAt: -1 })
                 .limit(limit);
             
             if (user.length === 0) {
@@ -296,6 +300,7 @@ class AuthController {
             }
 
             const totalUsers = await userModel.countDocuments();
+
             const totalPages = totalUsers > 0 ? Math.ceil(totalUsers / limit) : 0;
             const hasNextPage = page < totalPages;
             const hasPreviousPage = page > 1;
@@ -319,6 +324,55 @@ class AuthController {
             return res.status(500).json({
                 status: "error",
                 message: "Internal server error "+ error
+            })
+        }
+    }
+
+    // if cursor 
+    static async getAllUserByCursor(req, res) {
+        try {
+            const limit = Number(req.query.limit);
+            const cursor = req.query.cursor;
+
+            let query = {}
+
+            if (cursor) {
+                query._id = { $lt: cursor };
+            }
+
+            const users = await userModel
+                    .find( query )
+                    .sort({ _id: -1 }) // newest element
+                    .limit(limit)
+
+            if (users.length === 0) {
+                return res.status(400).json({
+                    status: "failed",
+                    message: "user not found"
+                });
+            }
+
+            const nextCursor = 
+                users.length > 0 
+                ? users[users.length - 1]._id 
+                : null;
+
+            return res.status(200).json({
+                status: "sucess",
+                message: "",
+                data: {
+                    users,
+                    pagination: {
+                        limit,
+                        cursor: nextCursor  
+                    }
+                }
+            });
+
+        } catch (error) {
+            return res.status(500).json({
+                status: "error",
+                message: "Internal server error :" + error
             })
         }
     }

@@ -9,6 +9,7 @@ router.post("/login", rateLimiter, AuthController.login);
 
 router.get("/get-user", AuthController.getUser);
 router.get("/get-all-user", AuthController.getAllUser);
+router.get("/get-all-user-by-cursor", AuthController.getAllUserByCursor);
 router.get("/refresh-token", AuthController.refreshToken);
 router.get("/logout", AuthController.logout);
 router.get("/logout-all", AuthController.logoutAll);
