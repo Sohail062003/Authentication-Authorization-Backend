@@ -346,7 +346,7 @@ class AuthController {
                     .limit(limit)
 
             if (users.length === 0) {
-                return res.status(400).json({
+                return res.status(404).json({
                     status: "failed",
                     message: "user not found"
                 });
