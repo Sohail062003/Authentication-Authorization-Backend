@@ -1,19 +1,19 @@
 import { Router } from "express";
 import  rateLimiter  from "../middleware/rateLimiter.js";
+import validate from "../middleware/validate.js";
+import { registerSchema } from "../validations/auth.validation.js";
 import { AuthController } from "../controllers/index.js";
 
 const router = Router();
 
-router.post("/register", AuthController.register);
+// post request
+router.post("/register", validate(registerSchema) ,rateLimiter, AuthController.register);
 router.post("/login", rateLimiter, AuthController.login);
 
-router.get("/get-user", AuthController.getUser);
-router.get("/get-all-user", AuthController.getAllUser);
-router.get("/get-all-user-by-cursor", AuthController.getAllUserByCursor);
+// get request
 router.get("/refresh-token", AuthController.refreshToken);
 router.get("/logout", AuthController.logout);
 router.get("/logout-all", AuthController.logoutAll);
 
-// module.exports = router;
 export default router;
 

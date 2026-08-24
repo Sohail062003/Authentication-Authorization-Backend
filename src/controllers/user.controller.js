@@ -4,7 +4,7 @@ import userModel from "../models/user.model.js";
 
 class UserController {
 
-     // getUser by token 
+    // getUser by token 
     static async getUser(req, res){
         try {
             const token = req.headers.authorization?.split(" ")[ 1 ];
