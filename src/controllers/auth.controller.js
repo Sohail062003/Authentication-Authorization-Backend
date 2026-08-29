@@ -108,7 +108,6 @@ class AuthController {
             }
 
             const hashedPassword = crypto.createHash("sha256").update(password).digest("hex");
-
             const isPasswordValid = hashedPassword === user.password;
 
             if (!isPasswordValid) {
