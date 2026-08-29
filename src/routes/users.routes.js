@@ -7,7 +7,7 @@ import { userPaginationSchema } from "../validations/user.validation.js";
 const router = Router();
 
 router.get("/get-user", authMiddleware,UserController.getUser);
-router.get("/get-all-user", validate(userPaginationSchema, "query") ,UserController.getAllUser);
+router.get("/get-all-user", authMiddleware,validate(userPaginationSchema, "query") ,UserController.getAllUser);
 router.get("/get-all-user-by-cursor", UserController.getAllUserByCursor);
 
 export default router;

@@ -99,11 +99,11 @@ class AuthController {
         try {
             const {email, password} = req.body
             const user = await userModel.findOne({ email });
-        
+            
             if (!user) {
                 return res.status(401).json({
                     status: "failed",
-                    message: "Invalid email or password"
+                    message: "email or password does't not exist"
                 });
             }
 
