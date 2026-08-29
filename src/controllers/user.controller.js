@@ -7,18 +7,20 @@ class UserController {
     // getUser by token 
     static async getUser(req, res){
         try {
-            const token = req.headers.authorization?.split(" ")[ 1 ];
+            // const token = req.headers.authorization?.split(" ")[ 1 ];
 
-            if (!token){
-                return res.status(401).json({
-                    status: "failed",
-                    message: "token not found"
-                })
-            }
+            // if (!token){
+            //     return res.status(401).json({
+            //         status: "failed",
+            //         message: "token not found"
+            //     })
+            // }
 
-            const decoded = jwt.verify(token, config.JWT_SECRET);
+            // const decoded = jwt.verify(token, config.JWT_SECRET);
+            const userId = req.user
+            console.log(userId);
 
-            const user = await userModel.findById(decoded.id);
+            const user = await userModel.findById(userId.id);
             const data = {
                 username: user.username,
                 email: user.email
