@@ -236,7 +236,6 @@ class AuthController {
                 accessToken
             });
 
-
         } catch (error) {
             return res.status(500).json({
                 status: "error",
