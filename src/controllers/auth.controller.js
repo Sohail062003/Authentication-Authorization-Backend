@@ -243,6 +243,7 @@ class AuthController {
             })
         }
     }
+    
 
     static async logout(req, res) {
         try {
