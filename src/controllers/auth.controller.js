@@ -231,7 +231,7 @@ class AuthController {
             })
 
             return res.status(200).json({
-                status: "sucess",
+                status: "success",
                 message: "access token refreshed successfully",
                 accessToken
             });
@@ -327,3 +327,5 @@ class AuthController {
 
 
 export default AuthController;
+
+
